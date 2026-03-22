@@ -33,7 +33,7 @@ export default function RisingStars({ data }: Props) {
             <Link
               key={entry.xHandle}
               to={`/founder/${entry.xHandle}`}
-              className="flex-none w-52 p-4 bg-white rounded-lg border border-amber-100 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+              className="flex-none w-52 p-4 bg-white rounded-lg border border-amber-100 hover:border-amber-300 transition-colors group"
             >
               <div className="mb-3">
                 <div className="font-semibold text-sm text-slate-900 truncate group-hover:text-amber-700 transition-colors">
