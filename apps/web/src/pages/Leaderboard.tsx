@@ -142,24 +142,8 @@ export default function Leaderboard() {
 
         {/* Main leaderboard card */}
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-          {/* Filters + Sort */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-200">
-            <CategoryFilter data={data} selected={category} onSelect={handleCategory} />
-            <div className="px-6 md:px-8 py-2 md:py-0 flex items-center gap-1.5 border-b md:border-b-0 border-slate-200 md:border-none">
-              <span className="text-xs text-slate-400 mr-1">Sort:</span>
-              {(["revenue", "mrr", "growth", "startups"] as SortKey[]).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => handleSort(key)}
-                  className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
-                    sortKey === key ? "text-emerald-700 bg-emerald-50 font-semibold" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  {key === "revenue" ? "Revenue" : key === "mrr" ? "MRR" : key === "growth" ? "Growth" : "# Startups"}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Filters */}
+          <CategoryFilter data={data} selected={category} onSelect={handleCategory} />
 
           {/* Results info */}
           {(search || category) && (
@@ -178,7 +162,7 @@ export default function Leaderboard() {
             </div>
           )}
 
-          <LeaderboardTable entries={visible} />
+          <LeaderboardTable entries={visible} sortKey={sortKey} onSort={handleSort} />
 
           {hasMore && (
             <div className="px-6 md:px-8 py-5 text-center border-t border-slate-200">

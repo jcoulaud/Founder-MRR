@@ -3,8 +3,12 @@ import { formatRevenue } from "@foundermrr/shared";
 import { Link } from "react-router-dom";
 import TrendArrow from "./TrendArrow";
 
+type SortKey = "revenue" | "mrr" | "growth" | "startups";
+
 interface Props {
   entries: FounderEntry[];
+  sortKey: SortKey;
+  onSort: (key: SortKey) => void;
 }
 
 const AVATAR_COLORS = [
@@ -61,7 +65,53 @@ function FounderAvatar({ handle }: { handle: string }) {
   );
 }
 
-export default function LeaderboardTable({ entries }: Props) {
+function SortIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${active ? "text-emerald-600" : "text-slate-300"}`}
+      viewBox="0 0 14 14"
+      fill="currentColor"
+    >
+      <path d="M7 2L10 6H4L7 2Z" opacity={active ? 1 : 0.5} />
+      <path d="M7 12L4 8H10L7 12Z" opacity={active ? 0.3 : 0.5} />
+    </svg>
+  );
+}
+
+function SortableHeader({
+  label,
+  sortKey: columnKey,
+  activeSortKey,
+  onSort,
+  align = "right",
+  className = "",
+}: {
+  label: string;
+  sortKey: SortKey;
+  activeSortKey: SortKey;
+  onSort: (key: SortKey) => void;
+  align?: "left" | "center" | "right";
+  className?: string;
+}) {
+  const isActive = activeSortKey === columnKey;
+  const alignClass = align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start";
+
+  return (
+    <th className={className}>
+      <button
+        onClick={() => onSort(columnKey)}
+        className={`inline-flex items-center gap-1 ${alignClass} w-full text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer select-none ${
+          isActive ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+        }`}
+      >
+        <span>{label}</span>
+        <SortIcon active={isActive} />
+      </button>
+    </th>
+  );
+}
+
+export default function LeaderboardTable({ entries, sortKey, onSort }: Props) {
   return (
     <>
       {/* Desktop table */}
@@ -71,10 +121,10 @@ export default function LeaderboardTable({ entries }: Props) {
             <tr className="bg-slate-50/80">
               <th className="pl-6 pr-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 w-14">#</th>
               <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Founder</th>
-              <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400 w-24">Startups</th>
-              <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Revenue (30d)</th>
-              <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">MRR</th>
-              <th className="pr-6 pl-3 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400 w-24">Growth</th>
+              <SortableHeader label="Startups" sortKey="startups" activeSortKey={sortKey} onSort={onSort} align="center" className="px-3 py-3 w-24" />
+              <SortableHeader label="Revenue (30d)" sortKey="revenue" activeSortKey={sortKey} onSort={onSort} className="px-3 py-3" />
+              <SortableHeader label="MRR" sortKey="mrr" activeSortKey={sortKey} onSort={onSort} className="px-3 py-3" />
+              <SortableHeader label="Growth" sortKey="growth" activeSortKey={sortKey} onSort={onSort} className="pr-6 pl-3 py-3 w-24" />
             </tr>
           </thead>
           <tbody>
@@ -127,28 +177,44 @@ export default function LeaderboardTable({ entries }: Props) {
         </table>
       </div>
 
-      {/* Mobile cards */}
-      <div className="md:hidden divide-y divide-slate-100">
-        {entries.map((entry) => (
-          <Link
-            key={entry.xHandle}
-            to={`/founder/${entry.xHandle}`}
-            className="flex items-center gap-3 px-5 py-3.5 hover:bg-emerald-50/40 active:bg-emerald-50/60 transition-colors"
-          >
-            <RankBadge rank={entry.rank} />
-            <FounderAvatar handle={entry.xHandle} />
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-slate-900">@{entry.xHandle}</div>
-              <div className="text-xs text-slate-400">
-                {entry.startups.slice(0, 2).map((s) => s.name).join(", ")}
+      {/* Mobile: sort selector + cards */}
+      <div className="md:hidden">
+        <div className="flex items-center gap-1.5 px-5 py-2.5 border-b border-slate-100 bg-slate-50/50">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sort:</span>
+          {(["revenue", "mrr", "growth", "startups"] as SortKey[]).map((key) => (
+            <button
+              key={key}
+              onClick={() => onSort(key)}
+              className={`text-[11px] font-semibold uppercase tracking-wider px-2 py-1 rounded transition-colors ${
+                sortKey === key ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              {key === "revenue" ? "Rev" : key === "mrr" ? "MRR" : key === "growth" ? "Growth" : "#"}
+            </button>
+          ))}
+        </div>
+        <div className="divide-y divide-slate-100">
+          {entries.map((entry) => (
+            <Link
+              key={entry.xHandle}
+              to={`/founder/${entry.xHandle}`}
+              className="flex items-center gap-3 px-5 py-3.5 hover:bg-emerald-50/40 active:bg-emerald-50/60 transition-colors"
+            >
+              <RankBadge rank={entry.rank} />
+              <FounderAvatar handle={entry.xHandle} />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm text-slate-900">@{entry.xHandle}</div>
+                <div className="text-xs text-slate-400">
+                  {entry.startups.slice(0, 2).map((s) => s.name).join(", ")}
+                </div>
               </div>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="font-mono font-semibold text-sm text-slate-900 tabular-nums">{formatRevenue(entry.totalRevenue30d)}/mo</div>
-              <TrendArrow growth={entry.avgGrowth30d} />
-            </div>
-          </Link>
-        ))}
+              <div className="text-right flex-shrink-0">
+                <div className="font-mono font-semibold text-sm text-slate-900 tabular-nums">{formatRevenue(entry.totalRevenue30d)}/mo</div>
+                <TrendArrow growth={entry.avgGrowth30d} />
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </>
   );
