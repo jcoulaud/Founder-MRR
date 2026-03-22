@@ -72,17 +72,21 @@ describe("formatGrowth", () => {
     expect(formatGrowth(null)).toBeNull();
   });
 
-  it("returns 0.0% for zero", () => {
-    expect(formatGrowth(0)).toBe("0.0%");
+  it("returns 0% for zero", () => {
+    expect(formatGrowth(0)).toBe("0%");
   });
 
   it("formats positive growth with +", () => {
-    expect(formatGrowth(9.4)).toBe("+9.4%");
-    expect(formatGrowth(0.1)).toBe("+0.1%");
+    expect(formatGrowth(9.4)).toBe("+9%");
+    expect(formatGrowth(0.1)).toBe("+0%");
   });
 
   it("formats negative growth", () => {
-    expect(formatGrowth(-2.1)).toBe("-2.1%");
+    expect(formatGrowth(-2.1)).toBe("-2%");
+  });
+
+  it("formats large numbers with commas", () => {
+    expect(formatGrowth(919200)).toBe("+919,200%");
   });
 });
 

@@ -201,7 +201,9 @@ export function isValidHandle(handle: string): boolean {
 
 export function formatGrowth(growth: number | null): string | null {
   if (growth === null) return null;
-  if (growth === 0) return "0.0%";
+  if (growth === 0) return "0%";
   const sign = growth > 0 ? "+" : "";
-  return `${sign}${growth.toFixed(1)}%`;
+  const rounded = Math.round(Math.abs(growth));
+  const formatted = rounded.toLocaleString("en-US");
+  return `${sign}${growth < 0 ? "-" : ""}${formatted}%`;
 }

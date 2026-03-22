@@ -7,9 +7,7 @@ import {
   escapeHtml,
   isValidHandle,
 } from "@foundermrr/shared";
-import { Resvg, initWasm } from "@resvg/resvg-wasm";
-// @ts-expect-error — wrangler bundles .wasm imports
-import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
+import { ImageResponse, loadGoogleFont } from "workers-og";
 
 interface Env {
   KV: KVNamespace;
@@ -22,6 +20,7 @@ const CRAWLER_UA_PATTERNS = [
 
 const OG_CACHE_TTL_FOUND = 21600; // 6 hours
 const OG_CACHE_TTL_FALLBACK = 3600; // 1 hour
+const OG_CACHE_VERSION = "v3"; // bump to invalidate OG cache on deploy
 const API_CACHE_MAX_AGE = 300; // 5 minutes
 const STALE_THRESHOLD_MS = 12 * 3600_000; // 12 hours
 
@@ -147,111 +146,254 @@ function buildCrawlerHtml(entry: FounderEntry): string {
 </html>`;
 }
 
-function generateOgSvg(entry: FounderEntry): string {
+function founderOgHtml(entry: FounderEntry): string {
   const rev = formatRevenueExact(entry.totalRevenue30d);
-  const mrr = formatRevenueExact(entry.totalMrr);
   const growth = formatGrowth(entry.avgGrowth30d);
-  const handle = escapeHtml(`@${entry.xHandle}`);
-  const rank = entry.rank;
   const startupNames = entry.startups.slice(0, 3).map((s) => escapeHtml(s.name)).join(", ");
-  const more = entry.startupCount > 3 ? ` +${entry.startupCount - 3} more` : "";
+  const more = entry.startupCount > 3 ? ` +${entry.startupCount - 3}` : "";
   const growthColor = entry.avgGrowth30d !== null && entry.avgGrowth30d > 0 ? "#059669" : "#DC2626";
+  const hasGrowth = growth !== null;
 
-  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#ffffff"/>
-  <rect x="0" y="0" width="1200" height="4" fill="#059669"/>
+  return `<div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#FFFFFF;font-family:'DM Sans',sans-serif;border:4px solid #E2E8F0;box-sizing:border-box;">
+  
+  <!-- Body -->
+  <div style="display:flex;flex:1;flex-direction:column;justify-content:center;padding:0 60px;">
+    <div style="display:flex;align-items:center;gap:24px;margin-bottom:24px;">
+      <div style="display:flex;font-size:24px;font-weight:700;color:#059669;letter-spacing:3px;text-transform:uppercase;">
+        Verified Founder
+      </div>
+      <div style="display:flex;background:#FFFBEB;border:2px solid #FBBF24;color:#D97706;padding:8px 20px;border-radius:12px;font-size:20px;font-weight:700;font-family:'Satoshi',sans-serif;letter-spacing:1px;">
+        RANK #${entry.rank}
+      </div>
+    </div>
+    <div style="display:flex;font-size:120px;font-family:'Satoshi',sans-serif;font-weight:900;color:#0F172A;letter-spacing:-4px;line-height:1;">
+      @${escapeHtml(entry.xHandle)}
+    </div>
+    <div style="display:flex;flex-direction:column;margin-top:24px;">
+      <div style="display:flex;font-size:40px;color:#64748B;font-weight:500;">Building ${startupNames}${more}</div>
+    </div>
+  </div>
 
-  <!-- Rank badge -->
-  <rect x="60" y="50" width="100" height="50" rx="10" fill="#FFFBEB" stroke="#FEF3C7" stroke-width="1"/>
-  <text x="110" y="84" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="28" fill="#B45309">#${rank}</text>
-
-  <!-- Brand -->
-  <text x="1140" y="82" text-anchor="end" font-family="sans-serif" font-weight="700" font-size="16" fill="#94A3B8" letter-spacing="2">FOUNDERMRR</text>
-
-  <!-- Handle -->
-  <text x="60" y="200" font-family="sans-serif" font-weight="700" font-size="52" fill="#0F172A">${handle}</text>
-
-  <!-- Startups -->
-  <text x="60" y="245" font-family="sans-serif" font-weight="400" font-size="20" fill="#94A3B8">${entry.startupCount} startup${entry.startupCount > 1 ? "s" : ""}: ${startupNames}${more}</text>
-
-  <!-- Divider -->
-  <rect x="60" y="290" width="1080" height="1" fill="#E2E8F0"/>
-
-  <!-- Revenue -->
-  <text x="60" y="360" font-family="sans-serif" font-weight="500" font-size="14" fill="#94A3B8" letter-spacing="1.5">REVENUE (30D)</text>
-  <text x="60" y="420" font-family="sans-serif" font-weight="700" font-size="56" fill="#0F172A">${rev}/mo</text>
-
-  <!-- MRR -->
-  <text x="500" y="360" font-family="sans-serif" font-weight="500" font-size="14" fill="#94A3B8" letter-spacing="1.5">MRR</text>
-  <text x="500" y="420" font-family="sans-serif" font-weight="700" font-size="56" fill="#0F172A">${mrr}</text>
-
-  <!-- Growth -->
-  ${growth ? `
-  <text x="850" y="360" font-family="sans-serif" font-weight="500" font-size="14" fill="#94A3B8" letter-spacing="1.5">GROWTH</text>
-  <text x="850" y="420" font-family="sans-serif" font-weight="700" font-size="56" fill="${growthColor}">${growth}</text>
-  ` : ""}
-
-  <!-- Footer -->
-  <rect x="0" y="530" width="1200" height="100" fill="#F8FAFC"/>
-  <text x="60" y="575" font-family="sans-serif" font-weight="500" font-size="16" fill="#94A3B8">foundermrr.com — Verified founder revenue, ranked</text>
-</svg>`;
+  <!-- Footer Metrics -->
+  <div style="display:flex;width:100%;height:200px;border-top:2px solid #E2E8F0;">
+    <div style="display:flex;flex:1;flex-direction:column;justify-content:center;padding:0 60px;border-right:2px solid #E2E8F0;background:#F8FAFC;">
+      <div style="display:flex;font-size:18px;font-weight:700;color:#64748B;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">
+        VERIFIED MRR (30D)
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <div style="display:flex;font-size:80px;font-family:'Geist Mono',monospace;font-weight:700;color:#0F172A;letter-spacing:-3px;line-height:1;">
+          ${rev}
+        </div>
+        <div style="display:flex;font-size:32px;font-family:'Geist Mono',monospace;font-weight:500;color:#94A3B8;margin-left:12px;line-height:1.2;margin-bottom:8px;">
+          /mo
+        </div>
+      </div>
+    </div>
+    
+    ${hasGrowth ? `
+    <div style="display:flex;width:400px;flex-direction:column;justify-content:center;padding:0 60px;background:#FFFFFF;">
+      <div style="display:flex;font-size:18px;font-weight:700;color:#64748B;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">
+        30D GROWTH
+      </div>
+      <div style="display:flex;font-size:80px;font-family:'Geist Mono',monospace;font-weight:700;color:${growthColor};letter-spacing:-3px;line-height:1;">
+        ${growth}
+      </div>
+    </div>
+    ` : `
+    <div style="display:flex;width:400px;flex-direction:column;justify-content:center;padding:0 60px;background:#FFFFFF;">
+      <div style="display:flex;font-size:18px;font-weight:700;color:#64748B;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">
+        STATUS
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;width:24px;height:24px;background:#059669;border-radius:12px;"></div>
+        <div style="display:flex;font-size:40px;font-family:'Satoshi',sans-serif;font-weight:700;color:#0F172A;line-height:1;">
+          Verified
+        </div>
+      </div>
+    </div>
+    `}
+  </div>
+</div>`;
 }
 
-function generateFallbackSvg(): string {
-  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#ffffff"/>
-  <rect x="0" y="0" width="1200" height="4" fill="#059669"/>
-  <text x="600" y="280" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="48" fill="#0F172A">FounderMRR</text>
-  <text x="600" y="340" text-anchor="middle" font-family="sans-serif" font-weight="400" font-size="24" fill="#94A3B8">Verified founder revenue, ranked</text>
-</svg>`;
+function homeOgHtml(data: LeaderboardData): string {
+  const top5 = data.data.slice(0, 5);
+  const rows = top5.map((f, i) => {
+    const rev = formatRevenueExact(f.totalRevenue30d);
+    return `<div style="display:flex;align-items:center;width:100%;flex:1;border-bottom:${i < 4 ? '1px solid #E2E8F0' : '0'};padding:0 60px;">
+      <div style="display:flex;font-family:'Geist Mono',monospace;font-size:32px;font-weight:700;color:${i < 3 ? '#D97706' : '#94A3B8'};width:100px;">
+        #${f.rank}
+      </div>
+      <div style="display:flex;flex:1;font-size:40px;font-family:'Satoshi',sans-serif;font-weight:900;color:#0F172A;letter-spacing:-1px;">
+        @${escapeHtml(f.xHandle)}
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
+        <div style="display:flex;font-family:'Geist Mono',monospace;font-size:40px;font-weight:700;color:#059669;letter-spacing:-2px;line-height:1;">
+          ${rev}
+        </div>
+        <div style="display:flex;font-family:'Geist Mono',monospace;font-size:24px;font-weight:500;color:#64748B;margin-left:8px;line-height:1.2;margin-bottom:4px;">
+          /mo
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#FFFFFF;font-family:'DM Sans',sans-serif;border:4px solid #E2E8F0;box-sizing:border-box;">
+  
+  <!-- Title Section -->
+  <div style="display:flex;flex-direction:column;justify-content:center;padding:48px 60px 48px 60px;border-bottom:2px solid #E2E8F0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;font-size:64px;font-family:'Satoshi',sans-serif;font-weight:900;color:#0F172A;letter-spacing:-2px;line-height:1;">
+        Startup Revenue Leaderboard
+      </div>
+      <div style="display:flex;font-size:24px;font-weight:700;color:#059669;letter-spacing:2px;text-transform:uppercase;">
+        ${data.totalFounders.toLocaleString()} Verified Founders
+      </div>
+    </div>
+    <div style="display:flex;font-size:28px;color:#64748B;margin-top:16px;font-weight:500;">
+      Founders ranked by verified Stripe revenue.
+    </div>
+  </div>
+
+  <!-- Rows -->
+  <div style="display:flex;flex-direction:column;flex:1;background:#FFFFFF;">
+    ${rows}
+  </div>
+
+</div>`;
 }
 
-let resvgInitialized = false;
+function fallbackOgHtml(): string {
+  return `<div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#FFFFFF;font-family:'DM Sans',sans-serif;border:4px solid #E2E8F0;box-sizing:border-box;">
+  
+  <!-- Body -->
+  <div style="display:flex;flex:1;flex-direction:column;justify-content:center;padding:0 80px;background:#FFFFFF;">
+    <div style="display:flex;font-size:32px;font-weight:700;color:#059669;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;">
+      Startup Revenue Leaderboard
+    </div>
+    <div style="display:flex;font-size:120px;font-family:'Satoshi',sans-serif;font-weight:900;color:#0F172A;letter-spacing:-4px;line-height:1;">
+      FounderMRR
+    </div>
+    <div style="display:flex;flex-direction:column;margin-top:32px;">
+      <div style="display:flex;font-size:40px;color:#64748B;font-weight:500;">Founders ranked by verified Stripe revenue.</div>
+      <div style="display:flex;font-size:40px;color:#64748B;font-weight:500;margin-top:12px;">Real MRR data from TrustMRR, updated daily.</div>
+    </div>
+  </div>
+</div>`;
+}
 
-async function svgToPng(svg: string): Promise<Uint8Array> {
-  if (!resvgInitialized) {
-    await initWasm(resvgWasm);
-    resvgInitialized = true;
+let fontsCache: { dmSansReg: ArrayBuffer, dmSansBold: ArrayBuffer, dmSansBlack: ArrayBuffer, geistMonoBold: ArrayBuffer, geistMonoMed: ArrayBuffer, satoshiBlack: ArrayBuffer } | null = null;
+
+async function getFonts() {
+  if (fontsCache) return fontsCache;
+  const [dmSansReg, dmSansBold, dmSansBlack, geistMonoBold, geistMonoMed] = await Promise.all([
+    loadGoogleFont({ family: "DM Sans", weight: 500 }),
+    loadGoogleFont({ family: "DM Sans", weight: 700 }),
+    loadGoogleFont({ family: "DM Sans", weight: 900 }),
+    loadGoogleFont({ family: "Geist Mono", weight: 700 }),
+    loadGoogleFont({ family: "Geist Mono", weight: 500 })
+  ]);
+  
+  // Try to load Satoshi, but if it fails (like XML error) fallback safely
+  let satoshiBlack = dmSansBlack;
+  try {
+    const cssRes = await fetch("https://api.fontshare.com/v2/css?f[]=satoshi@900&display=swap");
+    if (cssRes.ok) {
+      const css = await cssRes.text();
+      const urlMatch = css.match(/url\((['"]?)(https:\/\/[^'"]+)\1\)/);
+      if (urlMatch && urlMatch[2]) {
+        const fontRes = await fetch(urlMatch[2]);
+        if (fontRes.ok) {
+          const buffer = await fontRes.arrayBuffer();
+          // Ensure it's not an XML error page by checking the first few bytes
+          const view = new Uint8Array(buffer);
+          if (view.length > 4 && !(view[0] === 0x3C && view[1] === 0x3F && view[2] === 0x78 && view[3] === 0x6D)) { // <?xm
+            satoshiBlack = buffer;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore and use fallback
   }
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: "width", value: 1200 },
-    font: { defaultFontFamily: "sans-serif" },
-  });
-  const rendered = resvg.render();
-  return rendered.asPng();
+
+  fontsCache = { dmSansReg, dmSansBold, dmSansBlack, geistMonoBold, geistMonoMed, satoshiBlack };
+  return fontsCache;
 }
 
 async function handleOgImage(handle: string, env: Env, request: Request): Promise<Response> {
-  const cacheKey = new Request(request.url, request);
+  const cacheUrl = new URL(request.url);
+  cacheUrl.searchParams.set("_ogv", OG_CACHE_VERSION);
+  const cacheKey = new Request(cacheUrl.toString());
   const cache = caches.default;
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
 
   const entry = await findFounder(handle, env);
-  const svg = entry ? generateOgSvg(entry) : generateFallbackSvg();
+  const html = entry ? founderOgHtml(entry) : fallbackOgHtml();
+  const fonts = await getFonts();
 
-  let body: Uint8Array | string;
-  let contentType: string;
+  const response = new ImageResponse(html, {
+    width: 1200,
+    height: 630,
+    fonts: [
+      { name: "DM Sans", data: fonts.dmSansReg, weight: 500, style: "normal" },
+      { name: "DM Sans", data: fonts.dmSansBold, weight: 700, style: "normal" },
+      { name: "DM Sans", data: fonts.dmSansBlack, weight: 900, style: "normal" },
+      { name: "Geist Mono", data: fonts.geistMonoMed, weight: 500, style: "normal" },
+      { name: "Geist Mono", data: fonts.geistMonoBold, weight: 700, style: "normal" },
+      { name: "Satoshi", data: fonts.satoshiBlack, weight: 900, style: "normal" }
+    ],
+  });
 
-  try {
-    body = await svgToPng(svg);
-    contentType = "image/png";
-  } catch {
-    // Fallback to SVG if PNG conversion fails
-    body = svg;
-    contentType = "image/svg+xml";
-  }
-
-  const response = new Response(body, {
+  // Clone and add cache headers
+  const cachedResponse = new Response(response.body, {
     headers: {
-      "Content-Type": contentType,
+      "Content-Type": "image/png",
       "Cache-Control": `public, max-age=${entry ? OG_CACHE_TTL_FOUND : OG_CACHE_TTL_FALLBACK}`,
       ...corsHeaders(),
     },
   });
 
-  await cache.put(cacheKey, response.clone());
-  return response;
+  await cache.put(cacheKey, cachedResponse.clone());
+  return cachedResponse;
+}
+
+async function handleHomeOgImage(env: Env, request: Request): Promise<Response> {
+  const cacheUrl = new URL(request.url);
+  cacheUrl.searchParams.set("_ogv", OG_CACHE_VERSION);
+  const cacheKey = new Request(cacheUrl.toString());
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const data = await getLeaderboard(env);
+  const html = data ? homeOgHtml(data) : fallbackOgHtml();
+  const fonts = await getFonts();
+
+  const response = new ImageResponse(html, {
+    width: 1200,
+    height: 630,
+    fonts: [
+      { name: "DM Sans", data: fonts.dmSansReg, weight: 500, style: "normal" },
+      { name: "DM Sans", data: fonts.dmSansBold, weight: 700, style: "normal" },
+      { name: "DM Sans", data: fonts.dmSansBlack, weight: 900, style: "normal" },
+      { name: "Geist Mono", data: fonts.geistMonoMed, weight: 500, style: "normal" },
+      { name: "Geist Mono", data: fonts.geistMonoBold, weight: 700, style: "normal" },
+      { name: "Satoshi", data: fonts.satoshiBlack, weight: 900, style: "normal" }
+    ],
+  });
+
+  const cachedResponse = new Response(response.body, {
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": `public, max-age=${OG_CACHE_TTL_FOUND}`,
+      ...corsHeaders(),
+    },
+  });
+
+  await cache.put(cacheKey, cachedResponse.clone());
+  return cachedResponse;
 }
 
 function safeDecodeURIComponent(str: string): string | null {
@@ -278,6 +420,10 @@ export default {
       const handle = safeDecodeURIComponent(path.slice("/api/founder/".length));
       if (!handle || !isValidHandle(handle)) return jsonResponse({ error: "invalid_handle" }, 400);
       return handleFounder(handle, env);
+    }
+
+    if (path === "/og/home") {
+      return handleHomeOgImage(env, request);
     }
 
     if (path.startsWith("/og/")) {
