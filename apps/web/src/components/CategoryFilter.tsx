@@ -19,28 +19,34 @@ export default function CategoryFilter({ data, selected, onSelect }: Props) {
   }, [data]);
 
   return (
-    <div className="flex gap-2 px-6 md:px-8 py-3 border-b border-slate-200 flex-wrap">
+    <div className="flex gap-2 px-6 md:px-8 py-3.5 border-b border-slate-200 flex-wrap">
       <button
         onClick={() => onSelect(null)}
-        className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+        className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 ${
           selected === null
-            ? "bg-emerald-600 text-white border-emerald-600"
-            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+            ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
         }`}
       >
-        All <span className={selected === null ? "text-white/70" : "text-slate-400"}>{data.length.toLocaleString()}</span>
+        All{" "}
+        <span className={`ml-0.5 ${selected === null ? "text-white/70" : "text-slate-400"}`}>
+          {data.length.toLocaleString()}
+        </span>
       </button>
       {categories.slice(0, 8).map(([cat, count]) => (
         <button
           key={cat}
           onClick={() => onSelect(selected === cat ? null : cat)}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+          className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 ${
             selected === cat
-              ? "bg-emerald-600 text-white border-emerald-600"
-              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
           }`}
         >
-          {cat} <span className={selected === cat ? "text-white/70" : "text-slate-400"}>{count}</span>
+          {cat}{" "}
+          <span className={`ml-0.5 ${selected === cat ? "text-white/70" : "text-slate-400"}`}>
+            {count}
+          </span>
         </button>
       ))}
     </div>
