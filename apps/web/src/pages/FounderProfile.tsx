@@ -5,21 +5,6 @@ import { useLeaderboard } from "../hooks/useLeaderboard";
 import TrendArrow from "../components/TrendArrow";
 import ShareButton from "../components/ShareButton";
 
-const AVATAR_COLORS = [
-  "from-emerald-300 to-emerald-100 text-emerald-800",
-  "from-sky-300 to-sky-100 text-sky-800",
-  "from-violet-300 to-violet-100 text-violet-800",
-  "from-rose-300 to-rose-100 text-rose-800",
-  "from-amber-300 to-amber-100 text-amber-800",
-  "from-teal-300 to-teal-100 text-teal-800",
-];
-
-function avatarColor(handle: string) {
-  let hash = 0;
-  for (let i = 0; i < handle.length; i++) hash = ((hash << 5) - hash + handle.charCodeAt(i)) | 0;
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
 export default function FounderProfile() {
   const { identifier } = useParams<{ identifier: string }>();
   const { data, loading } = useLeaderboard();
@@ -66,9 +51,6 @@ export default function FounderProfile() {
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
           {/* Header */}
           <div className="px-6 md:px-8 py-8 md:py-10 flex items-center gap-4 md:gap-5 border-b border-slate-200">
-            <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${avatarColor(entry.xHandle)} flex items-center justify-center font-display font-bold text-2xl flex-shrink-0 ring-2 ring-white shadow-md`}>
-              {entry.xHandle.charAt(0).toUpperCase()}
-            </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-display font-black text-2xl md:text-3xl text-slate-900 tracking-tight">@{entry.xHandle}</h1>
               <p className="text-sm text-slate-500 mt-1">

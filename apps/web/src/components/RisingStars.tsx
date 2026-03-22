@@ -35,17 +35,12 @@ export default function RisingStars({ data }: Props) {
               to={`/founder/${entry.xHandle}`}
               className="flex-none w-52 p-4 bg-white rounded-lg border border-amber-100 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5 transition-all group"
             >
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center font-display font-bold text-xs text-amber-700 flex-shrink-0">
-                  {entry.xHandle.charAt(0).toUpperCase()}
+              <div className="mb-3">
+                <div className="font-semibold text-sm text-slate-900 truncate group-hover:text-amber-700 transition-colors">
+                  @{entry.xHandle}
                 </div>
-                <div className="min-w-0">
-                  <div className="font-semibold text-sm text-slate-900 truncate group-hover:text-amber-700 transition-colors">
-                    @{entry.xHandle}
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    {entry.startupCount} startup{entry.startupCount > 1 ? "s" : ""}
-                  </div>
+                <div className="text-[11px] text-slate-400">
+                  {entry.startupCount} startup{entry.startupCount > 1 ? "s" : ""}
                 </div>
               </div>
               <div className="flex items-baseline justify-between">

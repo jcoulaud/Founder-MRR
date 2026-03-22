@@ -12,23 +12,6 @@ interface Props {
   onSort: (key: SortKey) => void;
 }
 
-const AVATAR_COLORS = [
-  "from-emerald-200 to-emerald-100 text-emerald-800",
-  "from-sky-200 to-sky-100 text-sky-800",
-  "from-violet-200 to-violet-100 text-violet-800",
-  "from-rose-200 to-rose-100 text-rose-800",
-  "from-amber-200 to-amber-100 text-amber-800",
-  "from-teal-200 to-teal-100 text-teal-800",
-  "from-indigo-200 to-indigo-100 text-indigo-800",
-  "from-pink-200 to-pink-100 text-pink-800",
-];
-
-function avatarColor(handle: string) {
-  let hash = 0;
-  for (let i = 0; i < handle.length; i++) hash = ((hash << 5) - hash + handle.charCodeAt(i)) | 0;
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) {
     return (
@@ -55,14 +38,6 @@ function RankBadge({ rank }: { rank: number }) {
     <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 font-display font-semibold text-sm text-slate-400">
       {rank}
     </span>
-  );
-}
-
-function FounderAvatar({ handle }: { handle: string }) {
-  return (
-    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarColor(handle)} flex items-center justify-center font-display font-bold text-sm flex-shrink-0`}>
-      {handle.charAt(0).toUpperCase()}
-    </div>
   );
 }
 
@@ -142,8 +117,7 @@ export default function LeaderboardTable({ entries, sortKey, sortDir, onSort }: 
                     <RankBadge rank={entry.rank} />
                   </td>
                   <td className="px-3 py-3.5">
-                    <Link to={`/founder/${entry.xHandle}`} className="group flex items-center gap-3">
-                      <FounderAvatar handle={entry.xHandle} />
+                    <Link to={`/founder/${entry.xHandle}`} className="group">
                       <div className="min-w-0">
                         <div className={`font-semibold text-sm group-hover:text-emerald-600 transition-colors ${isTop3 ? "text-slate-900" : "text-slate-700"}`}>
                           @{entry.xHandle}
@@ -204,7 +178,6 @@ export default function LeaderboardTable({ entries, sortKey, sortDir, onSort }: 
               className="flex items-center gap-3 px-5 py-3.5 hover:bg-emerald-50/40 active:bg-emerald-50/60 transition-colors"
             >
               <RankBadge rank={entry.rank} />
-              <FounderAvatar handle={entry.xHandle} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm text-slate-900">@{entry.xHandle}</div>
                 <div className="text-xs text-slate-400">
