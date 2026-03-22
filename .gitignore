@@ -6,3 +6,5 @@ dist
 .env
 .gstack/
 pnpm-lock.yaml
+*.tsbuildinfo
+.DS_Store

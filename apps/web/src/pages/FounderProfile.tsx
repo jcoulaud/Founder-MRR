@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { formatRevenue, formatRevenueExact, formatGrowth } from "@foundermrr/shared";
 import { useLeaderboard } from "../hooks/useLeaderboard";
@@ -35,6 +35,11 @@ export default function FounderProfile() {
       </div>
     );
   }
+
+  useEffect(() => {
+    document.title = `@${entry.xHandle} — #${entry.rank} on FounderMRR`;
+    return () => { document.title = "FounderMRR — Verified Founder Revenue, Ranked"; };
+  }, [entry.xHandle, entry.rank]);
 
   const growth = formatGrowth(entry.avgGrowth30d);
 

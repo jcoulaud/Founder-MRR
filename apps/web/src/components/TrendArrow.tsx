@@ -11,7 +11,7 @@ export default function TrendArrow({ growth }: Props) {
     return <span className="text-slate-300 text-xs">&mdash;</span>;
   }
 
-  if (growth! > 0) {
+  if (growth !== null && growth > 0) {
     return (
       <span className="inline-flex items-center gap-0.5 font-mono text-xs font-semibold text-emerald-600 tabular-nums">
         <svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor">

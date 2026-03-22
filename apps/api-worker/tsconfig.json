@@ -4,13 +4,16 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "strict": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"],
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
     "paths": {
       "@foundermrr/shared": ["../../packages/shared/types"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts"]
 }

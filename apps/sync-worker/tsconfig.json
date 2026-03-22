@@ -6,6 +6,11 @@
     "strict": true,
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"],
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
     "paths": {
       "@foundermrr/shared": ["../../packages/shared/types"]
     }

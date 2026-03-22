@@ -3,6 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2025-03-20"
 compatibility_flags = ["nodejs_compat"]
 
+routes = [
+  { pattern = "foundermrr.com/api/*", zone_name = "foundermrr.com" },
+  { pattern = "foundermrr.com/og/*", zone_name = "foundermrr.com" },
+  { pattern = "foundermrr.com/founder/*", zone_name = "foundermrr.com" },
+]
+
 [[kv_namespaces]]
 binding = "KV"
 id = "41ffefbbe51a4106afcf4107d5aa7d81"
+preview_id = "41ffefbbe51a4106afcf4107d5aa7d81"

@@ -115,7 +115,7 @@ export function aggregateFounders(startups: TrustMRRStartup[]): FounderEntry[] {
     }
 
     // Unique categories
-    const categories = [...new Set(slist.map((s) => s.category).filter(Boolean))] as string[];
+    const categories = [...new Set(slist.map((s) => s.category).filter((c): c is string => c !== null))];
 
     // Country from first startup that has one
     const country = slist.find((s) => s.country)?.country || null;
@@ -162,20 +162,46 @@ export function aggregateFounders(startups: TrustMRRStartup[]): FounderEntry[] {
   return founders;
 }
 
+/** Add thousands separators (locale-independent) */
+function addCommas(n: number): string {
+  const s = String(n);
+  const parts: string[] = [];
+  for (let i = s.length; i > 0; i -= 3) {
+    parts.unshift(s.slice(Math.max(0, i - 3), i));
+  }
+  return parts.join(",");
+}
+
 /** Format a dollar value for compact display (e.g. $71K, $3.1M) */
 export function formatRevenue(dollars: number): string {
   if (dollars >= 1_000_000) return `$${(dollars / 1_000_000).toFixed(1)}M`;
-  if (dollars >= 1_000) return `$${Math.round(dollars / 1_000).toLocaleString("en-US")}K`;
-  return `$${Math.round(dollars).toLocaleString("en-US")}`;
+  if (dollars >= 1_000) return `$${addCommas(Math.round(dollars / 1_000))}K`;
+  return `$${addCommas(Math.round(dollars))}`;
 }
 
 /** Format a dollar value with full precision (e.g. $71,439) */
 export function formatRevenueExact(dollars: number): string {
-  return `$${Math.round(dollars).toLocaleString("en-US")}`;
+  return `$${addCommas(Math.round(dollars))}`;
+}
+
+/** Escape string for safe embedding in HTML/XML attributes and content */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+/** Validate that a string is a safe X/Twitter handle */
+export function isValidHandle(handle: string): boolean {
+  return /^[a-zA-Z0-9_]{1,15}$/.test(handle);
 }
 
 export function formatGrowth(growth: number | null): string | null {
-  if (growth === null || growth === 0) return null;
+  if (growth === null) return null;
+  if (growth === 0) return "0.0%";
   const sign = growth > 0 ? "+" : "";
   return `${sign}${growth.toFixed(1)}%`;
 }

@@ -11,10 +11,6 @@ export type SortDir = "desc" | "asc";
 
 const PAGE_SIZE = 50;
 
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export default function Leaderboard() {
   const { data, loading, error, retry, lastSyncedAt, totalFounders, totalStartups } = useLeaderboard();
   const [search, setSearch] = useState("");
@@ -51,7 +47,7 @@ export default function Leaderboard() {
     }
 
     if (search.trim()) {
-      const q = escapeRegex(search.trim().toLowerCase());
+      const q = search.trim().toLowerCase();
       result = result.filter((f) => {
         const handle = f.xHandle.toLowerCase();
         const startupNames = f.startups.map((s) => s.name.toLowerCase()).join(" ");
@@ -176,7 +172,7 @@ export default function Leaderboard() {
         <footer className="flex flex-col md:flex-row items-center justify-between gap-3 py-8 text-xs text-slate-400">
           <span>
             Data from{" "}
-            <a href="https://trustmrr.com" className="text-emerald-600 hover:underline font-medium" target="_blank" rel="noopener">
+            <a href="https://trustmrr.com" className="text-emerald-600 hover:underline font-medium" target="_blank" rel="noopener noreferrer">
               TrustMRR
             </a>{" "}
             &middot; Revenue verified via payment providers

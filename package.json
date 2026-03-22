@@ -4,5 +4,13 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b apps/web && tsc -b apps/sync-worker && tsc -b apps/api-worker"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
 }

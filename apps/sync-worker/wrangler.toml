@@ -8,3 +8,4 @@ crons = ["0 */6 * * *"]
 [[kv_namespaces]]
 binding = "KV"
 id = "41ffefbbe51a4106afcf4107d5aa7d81"
+preview_id = "41ffefbbe51a4106afcf4107d5aa7d81"

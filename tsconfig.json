@@ -1,0 +1,8 @@
+{
+  "references": [
+    { "path": "apps/web" },
+    { "path": "apps/sync-worker" },
+    { "path": "apps/api-worker" }
+  ],
+  "files": []
+}

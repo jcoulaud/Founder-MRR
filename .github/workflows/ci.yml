@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Type-check web
+        run: bun run --cwd apps/web tsc -b --noEmit
+
+      - name: Type-check sync-worker
+        run: bun run --cwd apps/sync-worker tsc --noEmit
+
+      - name: Type-check api-worker
+        run: bun run --cwd apps/api-worker tsc --noEmit
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Build web
+        run: bun run --cwd apps/web build

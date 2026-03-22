@@ -19,6 +19,8 @@ const BATCH_DELAY_MS = 2000;
 const MAX_RETRIES = 3;
 const LOCK_TTL_SECONDS = 300;
 
+// Best-effort lock via KV. Not atomic (TOCTOU possible) but acceptable:
+// concurrent syncs are idempotent (full KV overwrite), and cron runs every 6h.
 async function acquireLock(kv: KVNamespace): Promise<boolean> {
   const existing = await kv.get(KV_KEYS.SYNC_LOCK);
   if (existing) return false;
@@ -62,7 +64,7 @@ async function fetchPage(
     }
 
     if (!res.ok) {
-      if (retries < 2) {
+      if (retries < MAX_RETRIES) {
         await sleep(2000);
         return fetchPage(page, apiKey, retries + 1);
       }
@@ -70,9 +72,14 @@ async function fetchPage(
       return null;
     }
 
-    return (await res.json()) as TrustMRRResponse;
+    const body: unknown = await res.json();
+    if (!body || typeof body !== "object" || !Array.isArray((body as Record<string, unknown>).data) || !(body as Record<string, unknown>).meta) {
+      console.error(`[sync] Unexpected API shape on page ${page}`);
+      return null;
+    }
+    return body as TrustMRRResponse;
   } catch (err) {
-    if (retries < 2) {
+    if (retries < MAX_RETRIES) {
       await sleep(2000);
       return fetchPage(page, apiKey, retries + 1);
     }
@@ -98,12 +105,8 @@ async function syncAll(env: Env): Promise<Response> {
     let hasMore = true;
 
     while (hasMore) {
-      const batch: number[] = [];
-      for (let i = 0; i < BATCH_SIZE && hasMore; i++) {
-        batch.push(page);
-        page++;
-        if (batch.length >= BATCH_SIZE) break;
-      }
+      const batch = Array.from({ length: BATCH_SIZE }, (_, i) => page + i);
+      page += BATCH_SIZE;
 
       const results = await Promise.all(
         batch.map((p) => fetchPage(p, env.TRUSTMRR_API_KEY))
@@ -185,7 +188,7 @@ export default {
     return new Response("Not Found", { status: 404 });
   },
 
-  async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+  async scheduled(_event: ScheduledController, env: Env, _ctx: ExecutionContext): Promise<void> {
     console.log("[sync] Cron trigger fired");
     await syncAll(env);
   },

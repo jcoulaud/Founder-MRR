@@ -1,7 +1,8 @@
-import { defineConfig } from "vite";
+import { defineConfig, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import type { ServerResponse } from "http";
 
 // Dev-only mock data — serves when no VITE_API_URL is configured.
 // To use real data in dev: VITE_API_URL=https://your-api.workers.dev bun run dev
@@ -32,8 +33,8 @@ export default defineConfig({
     // Only serve mock data when no API URL is configured
     ...(!process.env.VITE_API_URL ? [{
       name: "mock-api",
-      configureServer(server: any) {
-        server.middlewares.use("/api/leaderboard", (_req: any, res: any) => {
+      configureServer(server: ViteDevServer) {
+        server.middlewares.use("/api/leaderboard", (_req: unknown, res: ServerResponse) => {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(MOCK_DATA));
         });

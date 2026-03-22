@@ -29,7 +29,7 @@ export default function RisingStars({ data }: Props) {
           Rising Founders
         </h3>
         <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-          {stars.map((entry, i) => (
+          {stars.map((entry) => (
             <Link
               key={entry.xHandle}
               to={`/founder/${entry.xHandle}`}
