@@ -60,7 +60,9 @@ export default function FounderProfile() {
               </p>
             </div>
             <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-50 border border-amber-100">
-              <span className="text-sm">&#127942;</span>
+              <svg className="w-4 h-4 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 1a.75.75 0 01.65.376l1.552 2.671 3.167.39a.75.75 0 01.395 1.305l-2.21 1.984.596 3.076a.75.75 0 01-1.106.776L10 9.96l-3.044 1.618a.75.75 0 01-1.106-.776l.596-3.076-2.21-1.984a.75.75 0 01.395-1.305l3.167-.39L9.35 1.376A.75.75 0 0110 1z" clipRule="evenodd" />
+              </svg>
               <span className="font-display font-bold text-amber-700 text-sm">#{entry.rank}</span>
             </div>
           </div>
