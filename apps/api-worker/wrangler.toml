@@ -1,0 +1,8 @@
+name = "foundermrr-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-20"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "41ffefbbe51a4106afcf4107d5aa7d81"

@@ -1,0 +1,10 @@
+name = "foundermrr-sync"
+main = "src/index.ts"
+compatibility_date = "2025-03-20"
+
+[triggers]
+crons = ["0 */6 * * *"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "41ffefbbe51a4106afcf4107d5aa7d81"
