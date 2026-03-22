@@ -124,27 +124,15 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Hero header — outside the card, breathing room */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-[1120px] mx-auto px-6 md:px-8 pt-10 md:pt-14 pb-8 md:pb-10">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="font-display font-black text-4xl md:text-5xl tracking-tight text-slate-900">
-                Founder<span className="text-emerald-600">MRR</span>
-              </h1>
-              <p className="text-base md:text-lg text-slate-500 mt-2 max-w-lg">
-                {totalFounders.toLocaleString()} indie founders ranked by verified revenue across {totalStartups.toLocaleString()} startups.
-              </p>
-            </div>
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-medium text-emerald-700">Live data</span>
-            </div>
-          </div>
+      <div className="max-w-[1120px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-6 md:pb-8">
+        <div className="mb-6 md:mb-8">
+          <h1 className="font-display font-black text-4xl md:text-5xl tracking-tight text-slate-900">
+            Founder<span className="text-emerald-600">MRR</span>
+          </h1>
+          <p className="text-base md:text-lg text-slate-500 mt-2 max-w-lg">
+            {totalFounders.toLocaleString()} indie founders ranked by verified revenue across {totalStartups.toLocaleString()} startups.
+          </p>
         </div>
-      </header>
-
-      <div className="max-w-[1120px] mx-auto px-4 md:px-6 py-6 md:py-8">
         <SearchBar onSearch={handleSearch} />
         <RisingStars data={data} />
 
