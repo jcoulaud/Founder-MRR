@@ -3,11 +3,12 @@ import { formatRevenue } from "@foundermrr/shared";
 import { Link } from "react-router-dom";
 import TrendArrow from "./TrendArrow";
 
-type SortKey = "revenue" | "mrr" | "growth" | "startups";
+import type { SortKey, SortDir } from "../pages/Leaderboard";
 
 interface Props {
   entries: FounderEntry[];
   sortKey: SortKey;
+  sortDir: SortDir;
   onSort: (key: SortKey) => void;
 }
 
@@ -65,15 +66,15 @@ function FounderAvatar({ handle }: { handle: string }) {
   );
 }
 
-function SortIcon({ active }: { active: boolean }) {
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   return (
     <svg
       className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${active ? "text-emerald-600" : "text-slate-300"}`}
       viewBox="0 0 14 14"
       fill="currentColor"
     >
-      <path d="M7 2L10 6H4L7 2Z" opacity={active ? 1 : 0.5} />
-      <path d="M7 12L4 8H10L7 12Z" opacity={active ? 0.3 : 0.5} />
+      <path d="M7 2L10 6H4L7 2Z" opacity={active ? (dir === "asc" ? 1 : 0.3) : 0.5} />
+      <path d="M7 12L4 8H10L7 12Z" opacity={active ? (dir === "desc" ? 1 : 0.3) : 0.5} />
     </svg>
   );
 }
@@ -82,6 +83,7 @@ function SortableHeader({
   label,
   sortKey: columnKey,
   activeSortKey,
+  sortDir,
   onSort,
   align = "right",
   className = "",
@@ -89,6 +91,7 @@ function SortableHeader({
   label: string;
   sortKey: SortKey;
   activeSortKey: SortKey;
+  sortDir: SortDir;
   onSort: (key: SortKey) => void;
   align?: "left" | "center" | "right";
   className?: string;
@@ -105,13 +108,13 @@ function SortableHeader({
         }`}
       >
         <span>{label}</span>
-        <SortIcon active={isActive} />
+        <SortIcon active={isActive} dir={sortDir} />
       </button>
     </th>
   );
 }
 
-export default function LeaderboardTable({ entries, sortKey, onSort }: Props) {
+export default function LeaderboardTable({ entries, sortKey, sortDir, onSort }: Props) {
   return (
     <>
       {/* Desktop table */}
@@ -121,10 +124,10 @@ export default function LeaderboardTable({ entries, sortKey, onSort }: Props) {
             <tr className="bg-slate-50/80">
               <th className="pl-6 pr-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 w-14">#</th>
               <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">Founder</th>
-              <SortableHeader label="Startups" sortKey="startups" activeSortKey={sortKey} onSort={onSort} align="center" className="px-3 py-3 w-24" />
-              <SortableHeader label="Revenue (30d)" sortKey="revenue" activeSortKey={sortKey} onSort={onSort} className="px-3 py-3" />
-              <SortableHeader label="MRR" sortKey="mrr" activeSortKey={sortKey} onSort={onSort} className="px-3 py-3" />
-              <SortableHeader label="Growth" sortKey="growth" activeSortKey={sortKey} onSort={onSort} className="pr-6 pl-3 py-3 w-24" />
+              <SortableHeader label="Startups" sortKey="startups" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} align="center" className="px-3 py-3 w-24" />
+              <SortableHeader label="Revenue (30d)" sortKey="revenue" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-3" />
+              <SortableHeader label="MRR" sortKey="mrr" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} className="px-3 py-3" />
+              <SortableHeader label="Growth" sortKey="growth" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} className="pr-6 pl-3 py-3 w-24" />
             </tr>
           </thead>
           <tbody>

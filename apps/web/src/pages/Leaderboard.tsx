@@ -6,7 +6,8 @@ import CategoryFilter from "../components/CategoryFilter";
 import RisingStars from "../components/RisingStars";
 import LeaderboardTable from "../components/LeaderboardTable";
 
-type SortKey = "revenue" | "mrr" | "growth" | "startups";
+export type SortKey = "revenue" | "mrr" | "growth" | "startups";
+export type SortDir = "desc" | "asc";
 
 const PAGE_SIZE = 50;
 
@@ -19,6 +20,7 @@ export default function Leaderboard() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
 
   const handleSearch = useCallback((q: string) => {
@@ -32,9 +34,14 @@ export default function Leaderboard() {
   }, []);
 
   const handleSort = useCallback((key: SortKey) => {
-    setSortKey(key);
+    if (key === sortKey) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
     setPage(1);
-  }, []);
+  }, [sortKey]);
 
   const filtered = useMemo(() => {
     let result = data;
@@ -53,23 +60,24 @@ export default function Leaderboard() {
     }
 
     const sorted = [...result];
+    const dir = sortDir === "desc" ? 1 : -1;
     switch (sortKey) {
       case "revenue":
-        sorted.sort((a, b) => b.totalRevenue30d - a.totalRevenue30d);
+        sorted.sort((a, b) => dir * (b.totalRevenue30d - a.totalRevenue30d));
         break;
       case "mrr":
-        sorted.sort((a, b) => b.totalMrr - a.totalMrr);
+        sorted.sort((a, b) => dir * (b.totalMrr - a.totalMrr));
         break;
       case "growth":
-        sorted.sort((a, b) => (b.avgGrowth30d ?? -Infinity) - (a.avgGrowth30d ?? -Infinity));
+        sorted.sort((a, b) => dir * ((b.avgGrowth30d ?? -Infinity) - (a.avgGrowth30d ?? -Infinity)));
         break;
       case "startups":
-        sorted.sort((a, b) => b.startupCount - a.startupCount);
+        sorted.sort((a, b) => dir * (b.startupCount - a.startupCount));
         break;
     }
 
     return sorted;
-  }, [data, category, search, sortKey]);
+  }, [data, category, search, sortKey, sortDir]);
 
   const visible = filtered.slice(0, page * PAGE_SIZE);
   const hasMore = visible.length < filtered.length;
@@ -162,7 +170,7 @@ export default function Leaderboard() {
             </div>
           )}
 
-          <LeaderboardTable entries={visible} sortKey={sortKey} onSort={handleSort} />
+          <LeaderboardTable entries={visible} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
 
           {hasMore && (
             <div className="px-6 md:px-8 py-5 text-center border-t border-slate-200">
