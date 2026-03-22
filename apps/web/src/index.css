@@ -46,3 +46,7 @@ h1, h2, h3 {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+input:focus-visible {
+  outline: none;
+}
